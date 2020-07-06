@@ -11,8 +11,5 @@ export class IframeContainerComponent implements OnInit {
 
   ngOnInit(): void {
   }
-  runAction(){
-    alert('wpwowowowowowow')
-    window.parent.postMessage('message', '*');
-  }
+
 }
