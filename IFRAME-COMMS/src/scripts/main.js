@@ -40,7 +40,7 @@ window.addEventListener("message", receiveMessage, false);
   
 function createPage (){
     // components
-    const iframe = new Iframe('http://localhost:4200/');
+    const iframe = new Iframe('http://localhost:8081/');
     const footer = new Footer('cat', 'dog');
 
     //this is where we add the data template string to the dom
