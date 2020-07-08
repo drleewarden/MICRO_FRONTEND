@@ -6,6 +6,8 @@ import { IframeContainerComponent } from './iframe-container/iframe-container.co
 import { GuestHostMediatorComponent } from './guest-host-mediator/guest-host-mediator.component';
 import { BatteryComponent } from './battery/battery.component';
 import { MyAccountComponent } from './my-account/my-account.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
 
 @NgModule({
   declarations: [
@@ -17,7 +19,8 @@ import { MyAccountComponent } from './my-account/my-account.component';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    BrowserAnimationsModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

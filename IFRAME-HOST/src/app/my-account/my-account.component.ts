@@ -8,9 +8,12 @@ declare let window: Window;
   templateUrl: './my-account.component.html',
   styleUrls: ['./my-account.component.scss']
 })
-
+// this is the Host Library
 export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
-
+  public color1 = '#dfeb76';
+  public color2 = '#e9350c'
+  public color3 = '#57970d'
+  public color4 = '#3c3c97'
   public dynamicStyle = '';
   public currentHref = '';
   public messageCount = 0;
@@ -26,10 +29,9 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     @Inject(DOCUMENT) 
     private document, 
+    // public iframeEl = document.getElementById('iframe-container'),
     private elementRef: ElementRef
-    ) 
-    {
-      window.addEventListener("message", this.receiveMessage, false);
+    ) {
    }  
   
   @HostListener('window:resize', ['$event'])
@@ -39,6 +41,14 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
     this.domChanges = new MutationObserver((mutations: MutationRecord[]) => {
           mutations.forEach((mutation: MutationRecord) => {
             console.log(`guest mutation detected (${(window.frameElement || {}).id || 'unable-to-resolve'})`, mutation);
+            // this.iframeEl.contentWindow.postMessage('hello world', 'https://localhost:4200');
+            
+            const iframeEl = this.document.getElementById('iframe-container');
+            const payload = {
+              display: true,
+              text: 'This Message is coming from the parent containter'
+            }
+            iframeEl.contentWindow.postMessage({payload:payload}, 'http://localhost:4200');
             this.resized();
           });
         }
@@ -109,7 +119,7 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
     // Do we trust the sender of this message?
     if (event.origin !== "http://localhost:4200")
       return;
-      
+
       console.log('message',event)
   }
   
@@ -117,7 +127,11 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
 
     window.addEventListener('message', (event: any) => {
       this.receiveMessage(event);
-      console.log('guest received', event);     
+      this.color1 = event.data.payload.color1
+      this.color2 = event.data.payload.color2
+      this.color3 = event.data.payload.color3
+      this.color4 = event.data.payload.color4
+      console.log('guest received', event);
 
     if (!event.origin.startsWith(this.targetOrigin)) {
         console.error(`we ignore window.postMessage messages from ${event.origin} - we only accept ${this.targetOrigin}`);
@@ -145,6 +159,6 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
           break;
       }
      event.source.postMessage({ messageType: 'ping-back', payload: 'foo'}, event.origin);    
-    });
+    }, false);
   } // required for lazy dom changes like agl-ds-button
 }

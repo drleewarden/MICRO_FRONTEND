@@ -30,6 +30,7 @@ export class GuestHostMediatorComponent implements OnInit {
       window.addEventListener(
           'message',
           (event) => {
+              alert('dfdf')
               if (!event.origin.startsWith(this.sameOriginTargetOrigin) && !event.origin.startsWith(this.diffOriginTargetOrigin)) {
                   return;
               } else if (!event.data.messageType) {
