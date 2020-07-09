@@ -11,9 +11,12 @@ declare let window: Window;
 // this is the Host Library
 export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
   public color1 = '#dfeb76';
-  public color2 = '#e9350c'
-  public color3 = '#57970d'
-  public color4 = '#3c3c97'
+  public color2 = '#e9350c';
+  public color3 = '#57970d';
+  public color4 = '#3c3c97';
+  public modalHeading = '';
+  public modalParagraph = '';
+  public showModal = false;
   public dynamicStyle = '';
   public currentHref = '';
   public messageCount = 0;
@@ -21,7 +24,7 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
   public sessionStorageData = '';
   private colorChanges = 0;
   private targetOrigin = this.document.location.href.includes('localhost:4200') ?
-      'https://localhost:4200' :
+      'http://localhost:4200' :
       'http://localhost:8080/';  
   private domChanges: MutationObserver;
   private previouslyPublishedWindowSize: { width: number, height: number};  
@@ -122,17 +125,17 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
 
       console.log('message',event)
   }
+  public addToSession(text): void {
+    sessionStorage.setItem('store',text);
+  }
   
   private initMessageHandler(): void {
 
     window.addEventListener('message', (event: any) => {
       this.receiveMessage(event);
-      this.color1 = event.data.payload.color1
-      this.color2 = event.data.payload.color2
-      this.color3 = event.data.payload.color3
-      this.color4 = event.data.payload.color4
+      
       console.log('guest received', event);
-
+      
     if (!event.origin.startsWith(this.targetOrigin)) {
         console.error(`we ignore window.postMessage messages from ${event.origin} - we only accept ${this.targetOrigin}`);
         return;
@@ -145,9 +148,27 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
       
       this.messageCount += 1;
       switch (event.data.messageType) {
-        case 'color-change':
-          this.document.body.style.background = event.data.payload;
+        case 'MODEL':
+          debugger
+          this.modalHeading = event.data.payload.message.heading;
+          this.modalParagraph = event.data.payload.message.paragraph;
+          this.showModal =  event.data.payload.model.open;
+          break
+        case 'CHANGE_COLOUR':
+          this.color1 = event.data.payload.color1
+          this.color2 = event.data.payload.color2
+          this.color3 = event.data.payload.color3
+          this.color4 = event.data.payload.color4
+          //window.document.body.style.background = event.data.payload;
           break;
+        case 'ping-back':
+        case 'loaded':
+            break;
+        case 'resized':
+            // this.resizeIframes(event.source);
+            //this.resizeIframe(event.data.payload);
+            break;
+                  
         case 'local-storage-change':
           this.localStorageData = localStorage.getItem('sharedDataWithGuest') || 'not found';
           break;
@@ -158,7 +179,7 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
           console.error(`unknown messageType received from host: ${event.data.messageType}`);
           break;
       }
-     event.source.postMessage({ messageType: 'ping-back', payload: 'foo'}, event.origin);    
+    // event.source.postMessage({ messageType: 'ping-back', payload: 'foo'}, event.origin);    
     }, false);
   } // required for lazy dom changes like agl-ds-button
 }

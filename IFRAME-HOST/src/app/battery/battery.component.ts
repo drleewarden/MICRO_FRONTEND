@@ -50,21 +50,21 @@ export class BatteryComponent {
                     data: event.data
                 });                
                 
-                switch (event.data.messageType) {
-                    case 'color-change':
-                        window.document.body.style.background = event.data.payload;
-                        break;
-                    case 'ping-back':
-                    case 'loaded':
-                        break;
-                    case 'resized':
-                        // this.resizeIframes(event.source);
-                        this.resizeIframe(event.data.payload);
-                        break;
-                    default:
-                        console.error(`unknown messageType received from guest: ${event.data.messageType}`);
-                        break;
-                }
+                // switch (event.data.messageType) {
+                //     case 'color-change':
+                //         window.document.body.style.background = event.data.payload;
+                //         break;
+                //     case 'ping-back':
+                //     case 'loaded':
+                //         break;
+                //     case 'resized':
+                //         // this.resizeIframes(event.source);
+                //         this.resizeIframe(event.data.payload);
+                //         break;
+                //     default:
+                //         console.error(`unknown messageType received from guest: ${event.data.messageType}`);
+                //         break;
+                // }
             },
             false
         );
@@ -73,6 +73,21 @@ export class BatteryComponent {
         //     this.changeTxt(e)
         // };
     }
+    public openParentModal(){
+        let type = 'MODEL';
+        let payload = {
+            message:{
+                heading:'this text is coming from the iframe',
+                paragraph:'this is the content for the model coming from the iframe',
+               
+            },
+            model: {
+                open: true,
+                target:'#exampleModal'
+            },
+        }
+      window.parent.postMessage({ messageType: type, payload:payload}, 'http://localhost:4200');
+    }
     public changeTxt(e){
         if (e.data.payload.display) {
             console.log('test', e.data.payload.text);
@@ -80,8 +95,15 @@ export class BatteryComponent {
         }
     }
     public runAction(){
+    let type = 'CHANGE_COLOUR';
     let payload = {color1:'pink',color2:'red', color3:'blue', color4:'yellow'}
-      window.parent.postMessage({payload:payload}, 'http://localhost:4200');
+      window.parent.postMessage(
+          {
+            messageType:type,
+            payload:payload
+        }, 
+          'http://localhost:4200'
+          );
     }
     
     public registerGuestFrame(id: string) {
