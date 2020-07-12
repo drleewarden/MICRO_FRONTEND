@@ -10,7 +10,8 @@ export class BatteryComponent {
     private frameIds: string[] = [];
     public textUpdate: string = 'Iframe Content'
     private colorChanges: number = 0;
-    private lsValue: number = 0;    private sameOriginTargetOrigin = this.document.location.href.includes('localhost:808')
+    private lsValue: number = 0;    
+    private sameOriginTargetOrigin = this.document.location.href.includes('localhost:808')
         ? 'https://localhost:8080'
         : 'https://quarterly-test.myaccount.agl.com.au';    
     private diffOriginTargetOrigin = this.document.location.href.includes('localhost:808') ? 'https://localhost:8081' : 'TODO';    
@@ -50,38 +51,21 @@ export class BatteryComponent {
                     data: event.data
                 });                
                 
-                // switch (event.data.messageType) {
-                //     case 'color-change':
-                //         window.document.body.style.background = event.data.payload;
-                //         break;
-                //     case 'ping-back':
-                //     case 'loaded':
-                //         break;
-                //     case 'resized':
-                //         // this.resizeIframes(event.source);
-                //         this.resizeIframe(event.data.payload);
-                //         break;
-                //     default:
-                //         console.error(`unknown messageType received from guest: ${event.data.messageType}`);
-                //         break;
-                // }
+              
             },
             false
         );
-        // window.onmessage = function(e){
-        //     debugger
-        //     this.changeTxt(e)
-        // };
+      
     }
     public openParentModal(){
-        let type = 'MODEL';
+        let type = 'MODAL';
         let payload = {
             message:{
                 heading:'this text is coming from the iframe',
-                paragraph:'this is the content for the model coming from the iframe',
+                paragraph:'this is the content for the modal coming from the iframe',
                
             },
-            model: {
+            modal: {
                 open: true,
                 target:'#exampleModal'
             },
@@ -94,6 +78,12 @@ export class BatteryComponent {
             this.textUpdate = e.data.payload.text
         }
     }
+    public dirMessageGuest(){
+        var ifrm = parent.document.getElementById('iframe-container-2');
+        var win = ifrm.contentWindow; // reference to iframe 2 window
+        // var doc = ifrm.contentDocument? ifrm.contentDocument: ifrm.contentWindow.document;
+        win.postMessage({ messageType: 'local-storage-change', payload: undefined }, 'http://localhost:4200')
+    }
     public runAction(){
     let type = 'CHANGE_COLOUR';
     let payload = {color1:'pink',color2:'red', color3:'blue', color4:'yellow'}
@@ -105,49 +95,29 @@ export class BatteryComponent {
           'http://localhost:4200'
           );
     }
-    
-    public registerGuestFrame(id: string) {
-        this.frameIds.push(id);
-    }    
-    
-    private resizeIframe(payload: { guestId: string; width: number; height: number }) {
-        const matchingIFrame = this.resolveVisibleFrame(payload.guestId);
-        if (matchingIFrame) {
-            console.log('matchingIFrame ' + payload.guestId, payload.height);
-            matchingIFrame.height = payload.height + 0; // don't know why I need the 1
-        }
-    }    
-    
-    public changeGuestDom(addLongerContent: boolean): void {
-        this.resolveVisibleFrames(this.sameOriginTargetOrigin).forEach((frame) => {
-            const targetElement = frame.contentWindow.document.querySelector('#injectionPlaceholder');
-            if (addLongerContent) {
-                targetElement.innerHTML += `<br>Injected '${++this.lsValue}' from host javascript (not window.postMessage)`;
-            } else {
-                targetElement.innerHTML = `Injected '${++this.lsValue}' from host javascript (not window.postMessage)`;
-            }
-        });
-    }    
-    
-    public setLocalStorage(): void {
-        localStorage.setItem('sharedDataWithGuest', `host value ${++this.lsValue}`);
 
-        this.resolveVisibleFrames(this.sameOriginTargetOrigin).forEach((frame) =>
-            frame.contentWindow.postMessage({ messageType: 'local-storage-change', payload: undefined }, this.sameOriginTargetOrigin)
-        );
-    }    
     
-    public setSessionStorage(): void {
-        sessionStorage.setItem('sharedDataWithGuest', `host value ${++this.lsValue}`);
-        this.resolveVisibleFrames(this.sameOriginTargetOrigin).forEach((frame) =>
-            frame.contentWindow.postMessage({ messageType: 'session-storage-change', payload: undefined }, this.sameOriginTargetOrigin)
-        );
-    }    
-    
+    public changeSize(): void {
+        let payloadData:any = {
+            guestId:"iframe-container",
+            width:"200px",
+            height: "200px"
+        }
+        window.parent.postMessage({messageType: 'IFRAME_RESIZE', payload: payloadData},'http://localhost:4200' );
+    }
+     // post message to guest iframe
+  private postMessage(messageType: string, payload?: {}): void {
+    payload = Object.assign(payload || {}, { guestId: (window.frameElement || {}).id || 'unable-to-resolve' });
+    parent.postMessage({ messageType, payload}, this.sameOriginTargetOrigin);
+  }
+
     public changeBGColor(): void {
         let payloadData:any = {name:"hello"}
-        const newColor = this.colorChanges++ % 2 === 0 ? '#FFFF88' : '#F5F5F5';        
+
+        const newColor = this.colorChanges++ % 2 === 0 ? '#FFFF88' : '#F5F5F5';    
+
         window.parent.postMessage({messageType: 'color-change', payload: payloadData},'http://localhost:4200' );
+
         this.resolveVisibleFrames(this.sameOriginTargetOrigin).forEach((frame) =>
             frame.contentWindow.postMessage({ messageType: 'color-change', payload: newColor }, this.sameOriginTargetOrigin)
         );        

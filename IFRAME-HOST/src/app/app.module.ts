@@ -7,6 +7,7 @@ import { GuestHostMediatorComponent } from './guest-host-mediator/guest-host-med
 import { BatteryComponent } from './battery/battery.component';
 import { MyAccountComponent } from './my-account/my-account.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { GuestContainerComponent } from './guest-container/guest-container.component';
 
 
 @NgModule({
@@ -15,7 +16,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     IframeContainerComponent,
     GuestHostMediatorComponent,
     BatteryComponent,
-    MyAccountComponent
+    MyAccountComponent,
+    GuestContainerComponent
   ],
   imports: [
     BrowserModule,

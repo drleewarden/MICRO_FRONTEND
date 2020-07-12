@@ -9,11 +9,11 @@
     <div id="box-3" class="col  p-5" [ngStyle]="{backgroundColor:color3}"  >{{color3}}</div>
     <div id="box-4" class="col  p-5" [ngStyle]="{backgroundColor:color4}"  >{{color4}}</div>
   </div>
+  <button class="btn btn-secondary" (click)="changeGuestDom()">update second iframe</button>
     <app-iframe-container></app-iframe-container>
   </div>
   
 
-<!-- Button trigger modal -->
 
 <!-- Modal -->
 <div [ngClass]="{'show': showModal}" class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
