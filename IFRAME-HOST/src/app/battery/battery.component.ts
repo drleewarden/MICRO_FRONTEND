@@ -28,7 +28,9 @@ export class BatteryComponent {
             .map((id: string) => this.document.getElementById(`${id}`))
             .find((e) => !!e);
     }    
-  
+  private changeUrl(){
+    parent.document.location.replace("http://localhost:4200/guest");
+  }
     constructor(
         
       @Inject(DOCUMENT) private document) {
@@ -58,7 +60,7 @@ export class BatteryComponent {
       
     }
     public openParentModal(){
-        let type = 'MODAL';
+        let type: string = 'MODAL';
         let payload = {
             message:{
                 heading:'this text is coming from the iframe',
@@ -79,7 +81,7 @@ export class BatteryComponent {
         }
     }
     public dirMessageGuest(){
-        var ifrm = parent.document.getElementById('iframe-container-2');
+        var ifrm: any = parent.document.getElementById('iframe-container-2');
         var win = ifrm.contentWindow; // reference to iframe 2 window
         // var doc = ifrm.contentDocument? ifrm.contentDocument: ifrm.contentWindow.document;
         win.postMessage({ messageType: 'local-storage-change', payload: undefined }, 'http://localhost:4200')
