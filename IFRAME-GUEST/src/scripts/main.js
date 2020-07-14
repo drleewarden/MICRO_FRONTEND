@@ -12,7 +12,7 @@ fetch('http://agl-developer-test.azurewebsites.net/people.json')
   }).then(function(data) {
       //call render after products are ready
     createPage(data);
-  })
+  });
   
 function createPage (data){
     // components

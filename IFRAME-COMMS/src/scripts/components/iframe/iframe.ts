@@ -1,5 +1,5 @@
 interface IIframe {
-    url: string;
+    url?: string;
     width?: string;
 }
 
@@ -10,17 +10,16 @@ export class Iframe implements IIframe {
      }
 
     render(){
-        console.log(this.url)
+        // console.log(this.url)
         return `
         <div>
-        <iframe 
-        src="${this.url}" 
-        title="W3Schools Free Online Web Tutorials"
-        allowfullscreen
-        style="border:none;position:absolute;top:0;left:0;width:100%;height:100%;" 
-        ></iframe>
-        
-                </div>
+            <iframe 
+            src="${this.url}" 
+            title="W3Schools Free Online Web Tutorials"
+            allowfullscreen
+            style="border:none;position:absolute;top:0;left:0;width:100%;height:100%;" 
+            ></iframe>
+        </div>
         `;
     }
 }

@@ -7,7 +7,7 @@ export default class Header{
         <div class="container">
                 <h1 class="my-4 col-sm-4 col-md-2">
                     AGL
-                    <small>Code Test</small>
+                    <small>Micro Frontend</small>
                 </h1>
             
         </div>`;
