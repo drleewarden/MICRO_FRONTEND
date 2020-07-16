@@ -31,7 +31,7 @@ export enum MessageType { // actions
 }
 // * this is what I have so far for the message method interface, this would have appropriate variables that need to be accessed by the  host or guest
 export interface IMessage{
-    id: number,
+    id: string,
     type: MessageType, // this would ref to a method in the host ie "CHANGE_URL"
     payload:{ // data from the post message
         name?: string, // name of the message if needed
@@ -79,14 +79,14 @@ export interface IMessage{
 
   export class HostMicroService implements IHost {
       constructor(
-          public iframes: string[],
-          public MutationObservables: string[],
-          public origin: string,
-          private document,
-          private domChanges: MutationObserver,
-          private elementRef: HTMLElement,
-          public store: IStore[],
-          public observer: MutationObserver
+        public origin: string,
+          public iframes?: string[],
+          public MutationObservables?: string[],
+          private document?,
+          private domChanges?: MutationObserver,
+          private elementRef?: HTMLElement,
+          public store?: IStore[],
+          public observer?: MutationObserver
           // Create an observer instance linked to the callback function
         
 
@@ -97,16 +97,19 @@ export interface IMessage{
   // ** COMMON LIB ** //
   // Recieve message action 
   private receiveMessage(
-      data:IMessage,
+    messageOrigin:string,
+    data:IMessage,
       ){
-          console.log('data recieved', data)
+          console.log('we have recieved your message thank you so much', data)
           // Do we trust the sender of this message?
-      if (origin !== "http://localhost:8081")
+      if (messageOrigin !== origin)
       return;
 
-      this.actionTypes( data.type, data )
+      this.actionTypes( data )
   }
-
+public hello() {
+  alert(this.origin);
+}
   // this is a ng model template. 
   public modalAG (){
       return `<!-- Modal -->
@@ -182,7 +185,7 @@ export interface IMessage{
     }
     // listen to dom changes through mutations
     private listenForDomChanges(DOMEle:string): void {
-      
+
     this.observer = new MutationObserver(this.callbackAfterMutation);
       // Select the node that will be observed for mutations
     const targetNode = document.getElementById(DOMEle);
@@ -228,9 +231,9 @@ export interface IMessage{
         // this.showModal =  event.data.payload.modal.open;
   }
   
-    private actionTypes(type: number, event:IMessage){
+    private actionTypes(event:IMessage){
 
-    switch (type) {
+    switch (event.type) {
         case 0: //SEND_MESSAGE
           break
 
@@ -245,6 +248,7 @@ export interface IMessage{
           break
 
         case 3:// SET_COOKIES
+        alert('yep')
          break
 
         case 4: // MODAL
@@ -287,8 +291,8 @@ export interface IMessage{
 
         public init(){
         window.addEventListener("message", (event)=>{
-            console.log('get data',event)
-            this.receiveMessage(event.data)
+            console.log('get data',event.origin)
+            this.receiveMessage(event.origin, event.data)
         },false)
         console.log('test', origin)
         }

@@ -10,7 +10,7 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 declare let window: Window;
-
+import { HostMicroService } from '../../../../IFRAME-COMMS/src/scripts/components/microFrontend';
 @Component({
   selector: 'app-my-account',
   templateUrl: './my-account.component.html',
@@ -32,7 +32,7 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
   public localStorageData = '';
   public sessionStorageData = '';
   private colorChanges = 0;
-  private lsValue  = 0;
+  private lsValue = 0;
   // private sameOriginTargetOrigin = this.document.location.href.includes('localhost:808')
   //     ? 'https://localhost:8080'
   //     : 'https://quarterly-test.myaccount.agl.com.au';
@@ -107,6 +107,12 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
+    const config = {
+      origin: 'http://localhost:4200',
+    };
+    const {origin} = config;
+    const host = new HostMicroService(origin);
+    host.init();
     this.localStorageData = localStorage.getItem('sharedDataWithGuest');
     this.sessionStorageData = sessionStorage.getItem('sharedDataWithGuest');
     this.currentHref = this.document.location.href;

@@ -1,5 +1,10 @@
 import { Component, OnInit, Injectable, Inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
+import {
+  HostMicroService,
+  MessageType,
+  IMessage,
+} from '../../../../IFRAME-COMMS/src/scripts/components/microFrontend';
 @Injectable()
 @Component({
   selector: 'app-battery',
@@ -36,7 +41,7 @@ export class BatteryComponent {
       .map((id: string) => this.document.getElementById(`${id}`))
       .find((e) => !!e);
   }
-  private changeUrl() {
+  public changeUrl(): void {
     parent.document.location.replace('http://localhost:4200/guest');
   }
   constructor(@Inject(DOCUMENT) private document) {
@@ -111,10 +116,23 @@ export class BatteryComponent {
       },
       'http://localhost:4200'
     );
+    const message: IMessage = {
+      id: 'make_alert',
+      type: MessageType.SET_COOKIES,
+      payload: {
+        sendMessage: {
+          message: 'this is the message',
+        },
+      },
+    };
+    window.parent.postMessage(
+      message,
+      'http://localhost:4200'
+    );
   }
 
   public changeSize(): void {
-    let payloadData: any = {
+    const payloadData: any = {
       guestId: 'iframe-container',
       width: '200px',
       height: '200px',
@@ -133,7 +151,7 @@ export class BatteryComponent {
   }
 
   public changeBGColor(): void {
-    let payloadData: any = { name: 'hello' };
+    const payloadData: any = { name: 'hello' };
 
     const newColor = this.colorChanges++ % 2 === 0 ? '#FFFF88' : '#F5F5F5';
 
