@@ -14,6 +14,7 @@ export class Iframe implements IIframe {
         return `
         <div>
             <iframe 
+            id="first-iframe"
             src="${this.url}" 
             title="W3Schools Free Online Web Tutorials"
             allowfullscreen
