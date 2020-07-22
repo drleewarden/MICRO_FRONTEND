@@ -8,6 +8,7 @@ module.exports = {
   entry: {
     app: Path.resolve(__dirname, '../src/scripts/main.js')
   },
+  testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
   output: {
     path: Path.join(__dirname, '../build'),
     filename: 'js/[name].js'

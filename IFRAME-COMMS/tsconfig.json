@@ -8,6 +8,8 @@
       "jsx": "react",
       "skipLibCheck": true,
       "allowJs": true,
-      "types":[]
-    }
+      // "types":[]
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "**/*.spec.ts"]
   }

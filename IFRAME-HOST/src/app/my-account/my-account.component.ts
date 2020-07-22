@@ -93,6 +93,7 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
     payload = Object.assign(payload || {}, {
       guestId: (window.frameElement || {}).id || 'unable-to-resolve',
     });
+    
     parent.postMessage({ messageType, payload }, this.targetOrigin);
   }
 
@@ -109,10 +110,12 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     const config = {
       origin: 'http://localhost:4200',
+      iframes: 'iframe-container',
     };
-    const {origin} = config;
-    const host = new HostMicroService(origin);
+    const { origin, iframes } = config;
+    const host = new HostMicroService(origin, iframes);
     host.init();
+    host.registerGuestFrame('iframe-container');
     this.localStorageData = localStorage.getItem('sharedDataWithGuest');
     this.sessionStorageData = sessionStorage.getItem('sharedDataWithGuest');
     this.currentHref = this.document.location.href;
@@ -228,7 +231,6 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
         this.messageCount += 1;
         switch (event.data.messageType) {
           case 'MODAL':
-            debugger;
             this.modalHeading = event.data.payload.message.heading;
             this.modalParagraph = event.data.payload.message.paragraph;
             this.showModal = event.data.payload.modal.open;

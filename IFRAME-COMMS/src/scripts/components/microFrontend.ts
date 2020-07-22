@@ -2,8 +2,8 @@
 
 // * Host Interfaces main variable that the library would need to know
 export interface IHost { 
-    iframes?: string[],// list of iframes being rendered
-    MutationObservables?: string []// list of dom elements that need to be watched
+    iframes: string[],// list of iframes being rendered
+    //MutationObservables?: string []// list of dom elements that need to be watched
     origin: string, // origin of where the iframe is hosted
 }
 
@@ -12,7 +12,7 @@ export interface IGuest {
     origin: string, // origin of where the iframe is hosted
     targets?: string [], //this is the placeholders id that the parent can target
     iframes?: string [],// list of iframes that are siblings
-    MutationObservables?: string []// list of dom elements that need to be watched
+   
 }
 // the enums would indicate the methods available, this is a short list I have started
 // the message type would push to the appropriate method also the methods available would be differnt for guest / host
@@ -59,11 +59,13 @@ export interface IMessage{
             width?: number,
             height?: number,
         },
+
         updateUrl?:{
           internal:boolean // if its changing the url to an external site or internal page
           path?: string,
           route?: string
         }
+
         localStorage?:{
             get: boolean,
             name: string,
@@ -79,37 +81,47 @@ export interface IMessage{
 
   export class HostMicroService implements IHost {
       constructor(
-        public origin: string,
-          public iframes?: string[],
-          public MutationObservables?: string[],
+          public origin: string,
+          public guestWrapperId?: string, //the guest needs to know the wrapper Id so it can update its size
+          public iframes: string[] = [],
           private document?,
-          private domChanges?: MutationObserver,
-          private elementRef?: HTMLElement,
+          public iframeHeight?: string,
           public store?: IStore[],
-          public observer?: MutationObserver
+          public observer?: MutationObserver,
+          
           // Create an observer instance linked to the callback function
         
 
           ){
          
       }
+  public init(){
+        // on load init create widow event to listern to window events
+        window.addEventListener("message", (event)=>{
+            this.receiveMessage(event.origin, event.data)
+        },false)
+    
+      }
+// host must register the iframe
+  public registerGuestFrame =(id: string):void => {
+     this.iframes.push(id);
+     // it needs to change the state of the array in the constructor so we can have a referance.
+  }
 
+  private previouslyPublishedWindowSize: { width: number; height: number };
   // ** COMMON LIB ** //
   // Recieve message action 
   private receiveMessage(
     messageOrigin:string,
     data:IMessage,
       ){
-          console.log('we have recieved your message thank you so much', data)
           // Do we trust the sender of this message?
-      if (messageOrigin !== origin)
-      return;
+          if (messageOrigin !== origin)
+          return;
 
       this.actionTypes( data )
   }
-public hello() {
-  alert(this.origin);
-}
+
   // this is a ng model template. 
   public modalAG (){
       return `<!-- Modal -->
@@ -135,11 +147,26 @@ public hello() {
       `
   }
   // get id of the iframe in the list
-  private resolveVisibleFrame(guestId: string): any {
-      return this.iframes
+  public resolveVisibleFrame(guestId: string): any {
+       const x = this.iframes
           .filter((id: string) => guestId.toLowerCase() === id.toLocaleLowerCase())
-          .map((id: string) => this.document.getElementById(`${id}`));
+          .map((id: string) => document.getElementById(`${id}`));
+          return x
           
+  }
+  public resized(): void {
+    const newValues = {
+      width: document.body.scrollWidth,
+      height: document.body.scrollHeight,
+    };
+    if (
+      !this.previouslyPublishedWindowSize ||
+      this.previouslyPublishedWindowSize.height !== newValues.height ||
+      this.previouslyPublishedWindowSize.height !== newValues.height
+    ) {
+      this.previouslyPublishedWindowSize = newValues;
+      
+    }
   }
 
   // resize the iframe take the width and height passed from the iframe
@@ -147,57 +174,70 @@ public hello() {
       const matchingIFrame = this.resolveVisibleFrame(payload.target);
       if (matchingIFrame) {
           console.log('matching IFrame size update ' + payload.target, payload.height);
-          matchingIFrame.height = payload.height;
-          matchingIFrame.width = payload.width;
+          if(payload.height)
+          matchingIFrame[0].height = payload.height;
+
+          if(payload.width)
+          matchingIFrame[0].width = payload.width;
       }
   }
 
   // Callback function to execute when mutations are observed
-  private callbackAfterMutation(  mutationsList:MutationRecord[]  ) {
+  private callbackAfterMutation=(  mutationsList:MutationRecord[]  ) =>{
     // Use traditional 'for loops' for IE 11
+
       mutationsList.forEach((mutation: MutationRecord) => {
         if (mutation.type === 'childList') {
           console.log('A child node has been added or removed.');
       }
       else if (mutation.type === 'attributes') {
           console.log('The ' + mutation.attributeName + ' attribute was modified.');
+         if(mutation.attributeName === 'style'){
+         
+           // this will re post a message to the parent to resize the iframe
+           // this is what makes it look seemless when an accordion is opened
+          const sizeUpdate: IMessage = {
+            id:'guest-size-changed',
+            type: MessageType.RESIZE_IFRAME, // resize event
+            payload:{
+             resizeIframe:{
+               target: this.guestWrapperId, // register the iframe that needs to be passed
+               height: mutation.target.ownerDocument.scrollingElement.scrollHeight, // mass the height from the window of the dom element that is changing
+             },
+            }
+           }
+           window.parent.postMessage(
+            sizeUpdate,
+            this.origin
+          );
+          
+         } 
+
       }
-      console.log(
-        'guest mutation detected',
-        mutation
-      );
-      // const iframeEl = this.document.getElementById('iframe-container');
-      // const payload = {
-      //   display: true,
-      //   text: 'This Message is coming from the parent containter',
-      // };
-      // iframeEl.contentWindow.postMessage(
-      //   { payload: payload },
-      //   'http://localhost:4200'
-      // );
-      // this.resizeIframe();
+     
     });
   
   };
-    private disconnect(){
+    public disconnect(){
       // stop observing
       this.observer.disconnect();
     }
     // listen to dom changes through mutations
-    private listenForDomChanges(DOMEle:string): void {
+    public listenForDomChanges(DOMEle:string): void {
+      
+       const targetNode = document.getElementById(DOMEle);
+      this.observer = new MutationObserver(this.callbackAfterMutation);
+        // Select the node that will be observed for mutations
+     
+      // Options for the observer (which mutations to observe)
+      const config = { 
+        attributes: true, 
+        childList: true,
+        characterData: true,
+        subtree: true };
 
-    this.observer = new MutationObserver(this.callbackAfterMutation);
-      // Select the node that will be observed for mutations
-    const targetNode = document.getElementById(DOMEle);
-    // Options for the observer (which mutations to observe)
-    const config = { 
-      attributes: true, 
-      childList: true,
-      characterData: true,
-      subtree: true };
-
-    // Start observing the target node for configured mutations
-    this.observer.observe(targetNode, config);
+      // Start observing the target node for configured mutations
+      this.observer.observe(targetNode, config);
 
     }
 
@@ -220,7 +260,9 @@ public hello() {
   private getLocalStorage(name){
     return localStorage.getItem(name) || 'not found';
   }
-
+  public styling(css:IMessage){
+    console.log('css',css)
+  }
   private modal(payload){
       // this will need to inject the dom of the iframe
 
@@ -231,10 +273,11 @@ public hello() {
         // this.showModal =  event.data.payload.modal.open;
   }
   
-    private actionTypes(event:IMessage){
-
+private actionTypes(event:IMessage){
+// this is the 
     switch (event.type) {
         case 0: //SEND_MESSAGE
+          this.postMessage(event,this.origin)
           break
 
         case 1: //  CHANGE_URL
@@ -248,7 +291,7 @@ public hello() {
           break
 
         case 3:// SET_COOKIES
-        alert('yep')
+       return'test1'
          break
 
         case 4: // MODAL
@@ -269,6 +312,7 @@ public hello() {
             break;
 
         case 8: // DESTROY_CONNECTION
+            this.disconnect()
             break;
 
         case 9: // INTERCOM_IFRAME
@@ -289,20 +333,19 @@ public hello() {
     
 }
 
-        public init(){
-        window.addEventListener("message", (event)=>{
-            console.log('get data',event.origin)
-            this.receiveMessage(event.origin, event.data)
-        },false)
-        console.log('test', origin)
-        }
-
         //  ** HOST *** //
         // send message to guest
         private sendMessagesToGuest = (GuestId: string, message:IMessage) => {
             const iframeEl = this.document.getElementById(GuestId);
             iframeEl.contentWindow.postMessage(message, this.origin);   
         }
+        //post message
+         public postMessage(message:IMessage, postOrigin:string){
+            window.parent.postMessage(
+              message,
+              postOrigin
+            );
+         }
 
 }
     

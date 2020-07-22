@@ -4,6 +4,7 @@ import {
   HostMicroService,
   MessageType,
   IMessage,
+  IGuest,
 } from '../../../../IFRAME-COMMS/src/scripts/components/microFrontend';
 @Injectable()
 @Component({
@@ -11,11 +12,54 @@ import {
   templateUrl: './battery.component.html',
   styleUrls: ['./battery.component.scss'],
 })
-export class BatteryComponent {
+export class BatteryComponent implements OnInit, IGuest {
   private frameIds: string[] = [];
   public textUpdate = 'Iframe Content';
   private colorChanges: number;
   private lsValue: number;
+  public host: HostMicroService;
+  public origin = 'http://localhost:4200';
+  constructor(@Inject(DOCUMENT) private document) {
+    const config = {
+      origin: 'http://localhost:4200',
+      guestWrapperId: 'iframe-container',
+    };
+    (this.host = new HostMicroService(config.origin, config.guestWrapperId)),
+      this.host.init();
+    this.host.resized();
+    const heightOutput = document.querySelector('#height');
+    const widthOutput = document.querySelector('#width');
+    const results = document.getElementById('results');
+    function reportWindowSize(): void {
+      heightOutput.textContent = window.innerHeight;
+      widthOutput.textContent = window.innerWidth;
+    }
+
+    window.onresize = reportWindowSize;
+    window.addEventListener(
+      'message',
+      (event) => {
+        // this.changeTxt(event);
+        if (
+          !event.origin.startsWith(this.sameOriginTargetOrigin) &&
+          !event.origin.startsWith(this.diffOriginTargetOrigin)
+        ) {
+          return;
+        } else if (!event.data.messageType) {
+          return;
+        }
+
+        console.log('received response', {
+          messageType: event.data.messageType,
+          guestId: ((event.data || {}).payload || {}).guestId,
+          origin: event.origin,
+          data: event.data,
+        });
+      },
+      false
+    );
+  }
+
   private sameOriginTargetOrigin = this.document.location.href.includes(
     'localhost:808'
   )
@@ -41,34 +85,13 @@ export class BatteryComponent {
       .map((id: string) => this.document.getElementById(`${id}`))
       .find((e) => !!e);
   }
+  ngOnInit(): void {
+    this.host.listenForDomChanges('accordion');
+  }
   public changeUrl(): void {
     parent.document.location.replace('http://localhost:4200/guest');
   }
-  constructor(@Inject(DOCUMENT) private document) {
-    const results = document.getElementById('results');
-    window.addEventListener(
-      'message',
-      (event) => {
-        this.changeTxt(event);
-        if (
-          !event.origin.startsWith(this.sameOriginTargetOrigin) &&
-          !event.origin.startsWith(this.diffOriginTargetOrigin)
-        ) {
-          return;
-        } else if (!event.data.messageType) {
-          return;
-        }
 
-        console.log('received response', {
-          messageType: event.data.messageType,
-          guestId: ((event.data || {}).payload || {}).guestId,
-          origin: event.origin,
-          data: event.data,
-        });
-      },
-      false
-    );
-  }
   public openParentModal() {
     let type: string = 'MODAL';
     let payload = {
@@ -116,6 +139,16 @@ export class BatteryComponent {
       },
       'http://localhost:4200'
     );
+    const css: IMessage = {
+      id: 'change_colour',
+      type: MessageType.STYLING,
+      payload: {
+        css: {
+          colour: 'red',
+        },
+      },
+    };
+    this.host.styling(css);
     const message: IMessage = {
       id: 'make_alert',
       type: MessageType.SET_COOKIES,
@@ -125,10 +158,7 @@ export class BatteryComponent {
         },
       },
     };
-    window.parent.postMessage(
-      message,
-      'http://localhost:4200'
-    );
+    window.parent.postMessage(message, 'http://localhost:4200');
   }
 
   public changeSize(): void {
