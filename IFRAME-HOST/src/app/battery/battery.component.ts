@@ -109,12 +109,14 @@ export class BatteryComponent implements OnInit, IGuest {
       'http://localhost:4200'
     );
   }
+
   public changeTxt(e) {
     if (e.data.payload.display) {
       console.log('test', e.data.payload.text);
       this.textUpdate = e.data.payload.text;
     }
   }
+
   public dirMessageGuest() {
     var ifrm: any = parent.document.getElementById('iframe-container-2');
     var win = ifrm.contentWindow; // reference to iframe 2 window
@@ -124,6 +126,7 @@ export class BatteryComponent implements OnInit, IGuest {
       'http://localhost:4200'
     );
   }
+  
   public runAction() {
     let type = 'CHANGE_COLOUR';
     let payload = {
@@ -148,7 +151,8 @@ export class BatteryComponent implements OnInit, IGuest {
         },
       },
     };
-    this.host.styling(css);
+    //this.host.styling(css);
+    window.parent.postMessage(css, 'http://localhost:4200');
     const message: IMessage = {
       id: 'make_alert',
       type: MessageType.SET_COOKIES,

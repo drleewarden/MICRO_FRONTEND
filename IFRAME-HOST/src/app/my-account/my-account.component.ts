@@ -1,5 +1,6 @@
 import {
   Component,
+  NgZone,
   OnInit,
   Inject,
   HostListener,
@@ -18,10 +19,12 @@ import { HostMicroService } from '../../../../IFRAME-COMMS/src/scripts/component
 })
 // this is the Host Library
 export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
+  public colorAuto = 'yellow';
   public color1 = '#dfeb76';
   public color2 = '#e9350c';
   public color3 = '#57970d';
   public color4 = '#3c3c97';
+  public title = '#3c3c97';
   public modalHeading = '';
   private frameIds: string[] = [];
   public modalParagraph = '';
@@ -45,14 +48,29 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     @Inject(DOCUMENT)
     private document,
+
     // public iframeEl = document.getElementById('iframe-container'),
-    private elementRef: ElementRef
-  ) {}
+    private elementRef: ElementRef,
+    private zone:NgZone
+  ) {
+    window.angularComponentRef = {
+      zone: this.zone, 
+      componentFn: (value) => this.callFromOutside(value), 
+      component: this
+    };
+  }
 
   @HostListener('window:resize', ['$event'])
   // register the iframes on the page
   public registerGuestFrame(id: string) {
     this.frameIds.push(id);
+  }
+  callFromOutside(value) {
+    // this.zone.run(() => {
+      console.log('calledFromOutside ' + value);
+      this.title = value;
+      this.colorAuto = value;
+    // });
   }
   // listen to dom changes through mutations
   private listenForDomChanges(): void {

@@ -260,8 +260,17 @@ export interface IMessage{
   private getLocalStorage(name){
     return localStorage.getItem(name) || 'not found';
   }
-  public styling(css:IMessage){
+  public styling(css: { // apparently ab testing requires changes to the css coming from the host
+      colour?: string; // stlying attributes will be added here
+      fontSize?: string;
+    }){
     console.log('css',css)
+    window.angularComponentRef.zone.run(() => {
+      window.angularComponentRef.component.callFromOutside(css.colour);
+    })
+    // ng.getComponent($0).title = 'css.colour'
+    // ng.applyChanges($0)
+    return css
   }
   private modal(payload){
       // this will need to inject the dom of the iframe
@@ -308,6 +317,7 @@ private actionTypes(event:IMessage){
             break;
 
         case 7: // STYLING
+            this.styling(event.payload.css)
             //  this.color1 = event.data.payload.color1
             break;
 
