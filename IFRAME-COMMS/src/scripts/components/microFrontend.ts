@@ -1,5 +1,9 @@
+declare global {
+  interface Window {
+    angularComponentRef: any;
+  }
+}
 // This is just a starting point, the library for the guest andh the host is flexible to growth
-
 // * Host Interfaces main variable that the library would need to know
 export interface IHost { 
     iframes: string[],// list of iframes being rendered
@@ -37,7 +41,6 @@ export interface IMessage{
         name?: string, // name of the message if needed
         target?: string // if manipulating a target
         message?: string, // name of the message
-        
         sendMessage?:{
             open?: boolean, // this would be for a popup or modal
             title?: string, // title of the message if needed
@@ -46,26 +49,28 @@ export interface IMessage{
         modal?:{
             open?: boolean, // this would be for a popup or modal
             title?: string, // title of the message if needed
-            message?: string, // name of the message
+            paragraph?: string, // name of the message
         }
-
         css?: { // apparently ab testing requires changes to the css coming from the host
             colour?: string, // stlying attributes will be added here
             fontSize?: string,
         },
-
         resizeIframe?:{
             target: string,
             width?: number,
             height?: number,
         },
-
         updateUrl?:{
           internal:boolean // if its changing the url to an external site or internal page
           path?: string,
           route?: string
+        },
+        domMutation?:{
+          stateChange: boolean // this is used it the state needs to handle the change
+          target:string // if its changing the url to an external site or internal page
+          text?: string,
+          html?: string
         }
-
         localStorage?:{
             get: boolean,
             name: string,
@@ -181,7 +186,7 @@ export interface IMessage{
           matchingIFrame[0].width = payload.width;
       }
   }
-
+ 
   // Callback function to execute when mutations are observed
   private callbackAfterMutation=(  mutationsList:MutationRecord[]  ) =>{
     // Use traditional 'for loops' for IE 11
@@ -254,7 +259,9 @@ export interface IMessage{
   private changeRoute(routeTemplate){
     // this.router.navigate('event-template')
     // this would need send a message that can access the parent route
+    window.angularComponentRef.component.router.navigate([routeTemplate]);
   }
+
 
   // get to local storage
   private getLocalStorage(name){
@@ -264,26 +271,32 @@ export interface IMessage{
       colour?: string; // stlying attributes will be added here
       fontSize?: string;
     }){
-    console.log('css',css)
+      const styes = {
+        messageType:'STYLES',
+        colour:[css.colour]
+      }
+   
     window.angularComponentRef.zone.run(() => {
-      window.angularComponentRef.component.callFromOutside(css.colour);
+      window.angularComponentRef.component.callFromOutside(styes);
     })
+    
     // ng.getComponent($0).title = 'css.colour'
     // ng.applyChanges($0)
     return css
   }
-  private modal(payload){
-      // this will need to inject the dom of the iframe
+private modal(payload){
 
-        // this.modalHeading = event.data.payload.message.heading;
-
-        // this.modalParagraph = event.data.payload.message.paragraph;
-
-        // this.showModal =  event.data.payload.modal.open;
+        payload.messageType = 'MODAL'
+        window.angularComponentRef.component.callFromOutside(payload);
   }
-  
+private domMutation(payload){
+  const {target, text} = payload
+  window.angularComponentRef.zone.run(() => {
+    window.angularComponentRef.component[target] = text;
+  })
+}
 private actionTypes(event:IMessage){
-// this is the 
+// this is the where the message type gets processesed
     switch (event.type) {
         case 0: //SEND_MESSAGE
           this.postMessage(event,this.origin)
@@ -300,7 +313,7 @@ private actionTypes(event:IMessage){
           break
 
         case 3:// SET_COOKIES
-       return'test1'
+       
          break
 
         case 4: // MODAL
@@ -313,7 +326,7 @@ private actionTypes(event:IMessage){
           break;
 
         case 6: //DOM_MUTATION
-         // window.document.body.style.background = event.data.payload;
+          this.domMutation(event.payload.domMutation)
             break;
 
         case 7: // STYLING

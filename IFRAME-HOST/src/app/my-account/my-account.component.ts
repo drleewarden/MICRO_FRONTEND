@@ -48,7 +48,7 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     @Inject(DOCUMENT)
     private document,
-
+    private router: Router,
     // public iframeEl = document.getElementById('iframe-container'),
     private elementRef: ElementRef,
     private zone:NgZone
@@ -65,11 +65,28 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
   public registerGuestFrame(id: string) {
     this.frameIds.push(id);
   }
-  callFromOutside(value) {
-    // this.zone.run(() => {
-      console.log('calledFromOutside ' + value);
-      this.title = value;
-      this.colorAuto = value;
+  callFromOutside(response) {
+    // this is where we register the properties that can be changes from the mirco frontend
+    switch (response.messageType) {
+      case 'MODAL':
+        this.modalHeading = response.title;
+        this.modalParagraph = response.paragraph;
+        this.showModal = response.open;
+        break;
+      case 'STYLES':
+        this.colorAuto = response.colour[0];
+        break;
+      case 'DOM_CHANGE':
+        this.title = response.colour[0];
+        break;
+      default:
+        console.error(
+          `unknown messageType received from host: ${response}`
+        );
+        break;
+    }
+      console.log('calledFromOutside ' + response);
+
     // });
   }
   // listen to dom changes through mutations

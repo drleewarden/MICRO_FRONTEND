@@ -1,7 +1,63 @@
 <div class="container">
-<h2>Name: AGL - iframe communitcation</h2>
-<h4>my-account works! {{title}}</h4>
+<h2>Name: AGL MICRO-FRONTEND (host)</h2>
+<div> 
+ 
+    <h4>Setup the host:</h4>
+    <p>we first need to import HostMicroService from '/microFrontend'</p>
 
+    <em>private router: Router,</em>
+    <p>we need this if we plan on updating the route from the guest</p>
+
+
+    <h3>We need to make the component available
+      for the microFrontend to manipulate</h3>
+      <div>
+        <figure class="highlight">
+          <pre>
+            <code class="language-js"  data-lang="js">
+            window.angularComponentRef = 
+              zone: this.zone, 
+              componentFn: (value) => this.callFromOutside(value), 
+              component: this
+            
+            </code>
+          </pre>
+        </figure>
+      </div>
+      <h3>Everything that needs to be available for updating has to be in the callback</h3>
+        <div>
+          <figure class="highlight">
+            <pre>
+              <code class="language-js"  data-lang="js">
+                callFromOutside(response) 
+                  // this is where we register the properties that can be changes from the mirco frontend
+                  switch (response.messageType) 
+                    case 'MODAL':
+                      this.modalHeading = response.title;
+                      this.modalParagraph = response.paragraph;
+                      this.showModal = response.open;
+                      break;
+                    case 'STYLES':
+                      this.colorAuto = response.colour[0];
+                      break;
+                    default:
+                      console.error(
+                        `unknown messageType received from host:
+                      );
+                      break;
+                    console.log('calledFromOutside ' + response);
+              </code>
+            </pre>
+          </figure>
+        </div>
+      
+     
+</div>
+<h4>EXAMPLES: {{title}}</h4>
+<p>All the example are in the iframe container</p>
+
+<a routerLink="/battery">Battery</a> |
+<a routerLink="/guest">Guest</a>
 <div class="row">
   <div id="box-auto" class="col-12 p-5" [ngStyle]="{backgroundColor:colorAuto}"  >{{colorAuto}}</div>
     <div id="box-1" class="col p-5" [ngStyle]="{backgroundColor:color1}"  >{{color1}}</div>

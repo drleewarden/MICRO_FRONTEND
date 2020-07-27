@@ -19,45 +19,18 @@ export class BatteryComponent implements OnInit, IGuest {
   private lsValue: number;
   public host: HostMicroService;
   public origin = 'http://localhost:4200';
+  
   constructor(@Inject(DOCUMENT) private document) {
     const config = {
       origin: 'http://localhost:4200',
       guestWrapperId: 'iframe-container',
     };
-    (this.host = new HostMicroService(config.origin, config.guestWrapperId)),
-      this.host.init();
+    this.host = new HostMicroService(config.origin, config.guestWrapperId),
+    this.host.init();
     this.host.resized();
     const heightOutput = document.querySelector('#height');
     const widthOutput = document.querySelector('#width');
     const results = document.getElementById('results');
-    function reportWindowSize(): void {
-      heightOutput.textContent = window.innerHeight;
-      widthOutput.textContent = window.innerWidth;
-    }
-
-    window.onresize = reportWindowSize;
-    window.addEventListener(
-      'message',
-      (event) => {
-        // this.changeTxt(event);
-        if (
-          !event.origin.startsWith(this.sameOriginTargetOrigin) &&
-          !event.origin.startsWith(this.diffOriginTargetOrigin)
-        ) {
-          return;
-        } else if (!event.data.messageType) {
-          return;
-        }
-
-        console.log('received response', {
-          messageType: event.data.messageType,
-          guestId: ((event.data || {}).payload || {}).guestId,
-          origin: event.origin,
-          data: event.data,
-        });
-      },
-      false
-    );
   }
 
   private sameOriginTargetOrigin = this.document.location.href.includes(
@@ -89,32 +62,56 @@ export class BatteryComponent implements OnInit, IGuest {
     this.host.listenForDomChanges('accordion');
   }
   public changeUrl(): void {
-    parent.document.location.replace('http://localhost:4200/guest');
+    // parent.document.location.replace('http://localhost:4200/guest');
+    './battery'
+    const route: IMessage = {
+      id: 'change-the-route',
+      type: MessageType.CHANGE_URL,
+      payload: {
+        updateUrl:{
+          internal: true, // if its changing the url to an external site or internal page
+          route: './battery'
+        }
+      },
+    };
+
+    window.parent.postMessage(route, 'http://localhost:4200');
+
   }
 
   public openParentModal() {
-    let type: string = 'MODAL';
-    let payload = {
-      message: {
-        heading: 'this text is coming from the iframe',
-        paragraph: 'this is the content for the modal coming from the iframe',
-      },
-      modal: {
-        open: true,
-        target: '#exampleModal',
+    //
+    const modal: IMessage = {
+      id: 'open-iframe',
+      type: MessageType.MODAL,
+      payload: {
+        modal:{
+          open: true, // this would be for a popup or modal
+          title: 'title', // title of the message if needed
+          paragraph: 'this is the content for the modal coming from the iframe thats goes throught the micro frontend', // name of the message
+      }
       },
     };
-    window.parent.postMessage(
-      { messageType: type, payload: payload },
-      'http://localhost:4200'
-    );
+
+    window.parent.postMessage(modal, 'http://localhost:4200');
+
   }
 
-  public changeTxt(e) {
-    if (e.data.payload.display) {
-      console.log('test', e.data.payload.text);
-      this.textUpdate = e.data.payload.text;
-    }
+  public changeText() {
+    const domChange: IMessage = {
+      id: 'change-text',
+      type: MessageType.DOM_MUTATION,
+      payload: {
+        domMutation:{
+          target:'title',
+          stateChange: true,
+          text:'updated text for title'
+        }
+      },
+    };
+
+    window.parent.postMessage(domChange, 'http://localhost:4200');
+
   }
 
   public dirMessageGuest() {
