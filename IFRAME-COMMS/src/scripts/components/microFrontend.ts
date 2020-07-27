@@ -38,7 +38,7 @@ export interface IMessage{
     id: string,
     type: MessageType, // this would ref to a method in the host ie "CHANGE_URL"
     payload:{ // data from the post message
-        name?: string, // name of the message if needed
+        name?: string, // name guest or host
         target?: string // if manipulating a target
         message?: string, // name of the message
         sendMessage?:{
@@ -70,7 +70,17 @@ export interface IMessage{
           target:string // if its changing the url to an external site or internal page
           text?: string,
           html?: string
-        }
+        },
+        sessionStorage?:{
+          get: boolean,
+          name: string,
+          content?: string
+      },
+      cookies?:{
+        get: boolean,
+        name: string,
+        content?: string
+    }
         localStorage?:{
             get: boolean,
             name: string,
@@ -178,7 +188,7 @@ export interface IMessage{
   private resizeIframe(payload: { target: string; width?: number; height?: number }) {
       const matchingIFrame = this.resolveVisibleFrame(payload.target);
       if (matchingIFrame) {
-          console.log('matching IFrame size update ' + payload.target, payload.height);
+          //console.log('matching IFrame size update ' + payload.target, payload.height);
           if(payload.height)
           matchingIFrame[0].height = payload.height;
 
@@ -193,10 +203,10 @@ export interface IMessage{
 
       mutationsList.forEach((mutation: MutationRecord) => {
         if (mutation.type === 'childList') {
-          console.log('A child node has been added or removed.');
+         // console.log('A child node has been added or removed.');
       }
       else if (mutation.type === 'attributes') {
-          console.log('The ' + mutation.attributeName + ' attribute was modified.');
+        //  console.log('The ' + mutation.attributeName + ' attribute was modified.');
          if(mutation.attributeName === 'style'){
          
            // this will re post a message to the parent to resize the iframe
@@ -251,7 +261,20 @@ export interface IMessage{
     localStorage.setItem(name, JSON.stringify(payload));
     this.store.push({name , payload})
   }
-
+  // get to local storage
+  private getLocalStorage(name){
+    return localStorage.getItem(name) || 'not found';
+  }
+  // add to local storage
+  private setSessionStorage(name, payload): void {
+    sessionStorage.setItem(name, JSON.stringify(payload));
+    this.store.push({name , payload})
+  }
+  // get to local storage
+  private getSessionStorage(name){
+    return sessionStorage.getItem(name) || 'not found';
+  }
+  
   private changeUrl(path: string) {
     parent.document.location.replace(path);
   }
@@ -263,10 +286,7 @@ export interface IMessage{
   }
 
 
-  // get to local storage
-  private getLocalStorage(name){
-    return localStorage.getItem(name) || 'not found';
-  }
+  
   public styling(css: { // apparently ab testing requires changes to the css coming from the host
       colour?: string; // stlying attributes will be added here
       fontSize?: string;
@@ -291,11 +311,14 @@ private modal(payload){
   }
 private domMutation(payload){
   const {target, text} = payload
-  window.angularComponentRef.zone.run(() => {
-    window.angularComponentRef.component[target] = text;
-  })
+  
+    window.angularComponentRef.zone.run(() => {
+      window.angularComponentRef.component[target] = text;
+    })
+
 }
 private actionTypes(event:IMessage){
+
 // this is the where the message type gets processesed
     switch (event.type) {
         case 0: //SEND_MESSAGE
@@ -310,10 +333,15 @@ private actionTypes(event:IMessage){
           break;
 
         case 2:// SET_SESSION_STORAGE
+            event.payload.localStorage.get ?
+            this.getSessionStorage(event.payload.sessionStorage.name)
+            :
+            this.setSessionStorage(event.payload.sessionStorage.name, event.payload.sessionStorage.content)
+            
           break
 
         case 3:// SET_COOKIES
-       
+          document.cookie = event.payload.cookies.content
          break
 
         case 4: // MODAL
@@ -350,7 +378,7 @@ private actionTypes(event:IMessage){
             break;
 
         default:
-         console.error(`unknown messageType received from host: ${event.id}`);
+         console.error(`unknown messageType received: ${event.type}`);
             break;
       }
     

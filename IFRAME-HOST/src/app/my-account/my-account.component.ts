@@ -11,7 +11,7 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 declare let window: Window;
-import { HostMicroService } from '../../../../IFRAME-COMMS/src/scripts/components/microFrontend';
+import { HostMicroService, IMessage, MessageType } from '../../../../IFRAME-COMMS/src/scripts/components/microFrontend';
 @Component({
   selector: 'app-my-account',
   templateUrl: './my-account.component.html',
@@ -64,6 +64,23 @@ export class MyAccountComponent implements OnInit, OnDestroy, AfterViewInit {
   // register the iframes on the page
   public registerGuestFrame(id: string) {
     this.frameIds.push(id);
+  }
+  public changeText() {
+    const domChange: IMessage = {
+      id: 'change-text',
+      type: MessageType.DOM_MUTATION,
+      payload: {
+        name:'host',
+        domMutation:{
+          target:'textUpdate',
+          stateChange: true,
+          text:'updated title'
+        }
+      },
+    };
+    const guest:any = document.getElementById('iframe-container');
+    guest.contentWindow.postMessage(domChange, 'http://localhost:4200');
+
   }
   callFromOutside(response) {
     // this is where we register the properties that can be changes from the mirco frontend

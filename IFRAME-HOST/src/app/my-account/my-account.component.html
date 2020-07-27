@@ -8,7 +8,7 @@
     <em>private router: Router,</em>
     <p>we need this if we plan on updating the route from the guest</p>
 
-
+    host.registerGuestFrame('iframe-container');
     <h3>We need to make the component available
       for the microFrontend to manipulate</h3>
       <div>
@@ -54,6 +54,7 @@
      
 </div>
 <h4>EXAMPLES: {{title}}</h4>
+<button  class="btn btn-info ml-5" (click)="changeText()" id="urlChange">this will change the title in the guest</button>
 <p>All the example are in the iframe container</p>
 
 <a routerLink="/battery">Battery</a> |

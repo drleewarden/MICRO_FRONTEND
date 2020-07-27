@@ -1,4 +1,4 @@
-import { Component, OnInit, Injectable, Inject } from '@angular/core';
+import { Component, OnInit, Injectable, Inject, NgZone } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import {
   HostMicroService,
@@ -20,7 +20,16 @@ export class BatteryComponent implements OnInit, IGuest {
   public host: HostMicroService;
   public origin = 'http://localhost:4200';
   
-  constructor(@Inject(DOCUMENT) private document) {
+  constructor(
+    @Inject(DOCUMENT) private document,
+    private zone:NgZone
+    ) {
+    window.angularComponentRef = {
+      zone: this.zone, 
+      componentFn: (value) => this.callFromOutside(value), 
+      component: this
+    };
+    
     const config = {
       origin: 'http://localhost:4200',
       guestWrapperId: 'iframe-container',
@@ -32,7 +41,9 @@ export class BatteryComponent implements OnInit, IGuest {
     const widthOutput = document.querySelector('#width');
     const results = document.getElementById('results');
   }
+  private callFromOutside(data){
 
+  }
   private sameOriginTargetOrigin = this.document.location.href.includes(
     'localhost:808'
   )
